@@ -16,16 +16,17 @@ PanelWindow {
 
     signal customizeRequested
     property int sel: 0
+    readonly property bool fedora: Quickshell.env("GLYPH_FEDORA") === "1"
     property bool hasUfw: false
-    Process { running: true; command: ["sh", "-c", "command -v ufw"]; onExited: code => {
+    Process { running: !root.fedora; command: ["sh", "-c", "command -v ufw"]; onExited: code => {
         const at = root.cur; // the list grows: stay on the same section
         root.hasUfw = code === 0;
         root.sel = Math.max(0, root.sections.indexOf(at));
     } }
     readonly property var sections: ["NETWORK", "BLUETOOTH", "SOUND", "DISPLAY", "DRIVES", "WORKSPACES", "POWER"]
-        .concat(UPower.displayDevice?.isLaptopBattery ? ["BATTERY"] : [], ["INPUT", "IDLE"], hasUfw ? ["FIREWALL"] : [], ["APPS", "ABOUT"])
+        .concat(UPower.displayDevice?.isLaptopBattery ? ["BATTERY"] : [], ["INPUT", "IDLE"], (fedora || hasUfw) ? ["FIREWALL"] : [], ["APPS", "ABOUT"])
     readonly property string cur: sections[sel] ?? ""
-    readonly property var pages: ({ NETWORK: net, BLUETOOTH: bt, SOUND: sound, DISPLAY: disp, DRIVES: drv, WORKSPACES: wsp, POWER: power, BATTERY: battery, INPUT: input, IDLE: idle, FIREWALL: fw, APPS: apps, ABOUT: about })
+    readonly property var pages: ({ NETWORK: net, BLUETOOTH: bt, SOUND: sound, DISPLAY: disp, DRIVES: drv, WORKSPACES: wsp, POWER: power, BATTERY: battery, INPUT: input, IDLE: idle, FIREWALL: root.fedora ? fedoraFw : fw, APPS: apps, ABOUT: about })
 
     property bool shown: false
     // the window appears a moment before it moves: its first frame (creating the surface) is the slow one, so it lands
@@ -131,7 +132,13 @@ PanelWindow {
         BatteryPage { id: battery; on: root.cur === "BATTERY"; live: root.shown && on }
         InputPage { id: input; on: root.cur === "INPUT"; live: root.shown && on }
         IdlePage { id: idle; on: root.cur === "IDLE" }
-        FirewallPage { id: fw; on: root.cur === "FIREWALL"; live: root.shown && on }
+        FirewallPage { id: fw; on: !root.fedora && root.cur === "FIREWALL"; live: root.shown && on }
+        FedoraFirewallPage {
+            id: fedoraFw
+            on: root.fedora && root.cur === "FIREWALL"
+            live: root.shown && on
+            onDone: root.close()
+        }
         AppsPage { id: apps; on: root.cur === "APPS"; live: root.shown && on; onDone: root.close() }
         AboutPage { id: about; on: root.cur === "ABOUT"; live: root.shown && on; onDone: root.close() }
 

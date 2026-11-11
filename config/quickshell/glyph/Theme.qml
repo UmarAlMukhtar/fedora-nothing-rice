@@ -215,6 +215,8 @@ Singleton {
             property int photoLook: 2
             property int photoSecs: 8
             // wallpaper (the wall/Walls picker, drawn by components/Wall): the image path; empty — grid and orb. The picker's folder can be changed here
+            property string liveWall: ""
+            property bool useLiveWall: false
             property string wall: ""
             property string wallDir: ""    // empty — ~/Pictures/Wallpapers
             property int wallLook: 0       // 0 dots, 1 grey photo, 2 color, 3 color dots
@@ -385,6 +387,7 @@ setw -g clock-mode-colour "#${accent}"
     // colors on their next start: gtk reads its gtk.css once, poking the theme doesn't help (tested on gtk 3 and 4).
     // btop isn't themed — its folder is a link into the repo as a whole, the copy would have nowhere to go
     function apps() {
+        if (Quickshell.env("GLYPH_FEDORA") === "1") return;
         if (!warm) {
             appsDue = true;
             return;

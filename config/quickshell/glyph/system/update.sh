@@ -16,7 +16,13 @@ else
         printf '\n== the system\n'
     fi
     helper=$(command -v yay || command -v paru)
-    if [ -n "$helper" ]; then "$helper" -Syu; else sudo pacman -Syu; fi
+    if [ "${GLYPH_FEDORA:-}" = 1 ]; then
+        sudo dnf5 upgrade
+    elif [ -n "$helper" ]; then
+        "$helper" -Syu
+    else
+        sudo pacman -Syu
+    fi
 fi
 if [ ! -d "/usr/lib/modules/$(uname -r)" ]; then
     printf '\nThe kernel was updated. Restart soon: until you do, newly plugged USB drives and some other devices will not work.\n'

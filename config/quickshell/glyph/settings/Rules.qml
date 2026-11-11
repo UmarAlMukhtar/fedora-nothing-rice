@@ -186,6 +186,7 @@ Singleton {
     // only waits like that for hyprlock): otherwise the lock falls asleep half-started, and on wake the monitors blink — a monitor that
     // drops in the first ~0.5 s of the lock's life kills qs (#5)
     function idle() {
+        if (Quickshell.env("DEMONSHOT_NESTED") === "1") return;
         idleDone = true;
         const s = store, dpms = a => `hyprctl dispatch 'hl.dsp.dpms({action = "${a}"})'`;
         const at = (min, on, back) => min ? `\nlistener {\n    timeout = ${min * 60}\n    on-timeout = ${on}${back ? `\n    on-resume = ${back}` : ""}\n}\n` : "";
@@ -199,6 +200,7 @@ Singleton {
     }
     function brightness() { Quickshell.execDetached(["brightnessctl", "-q", "set", store.brightness + "%"]); }
     function night() {
+        if (Quickshell.env("DEMONSHOT_NESTED") === "1") return;
         Quickshell.execDetached(["sh", "-c", store.night ? `pkill -x hyprsunset; exec hyprsunset -t ${store.warmth}` : "pkill -x hyprsunset"]);
     }
 

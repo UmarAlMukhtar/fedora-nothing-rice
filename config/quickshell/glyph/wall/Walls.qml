@@ -98,9 +98,16 @@ PanelWindow {
     }
     function close() { shown = false; }
     function toggle() { shown ? close() : open(); }
+    signal chooseVideo
+    function useVideo() {
+        close();
+        if (Theme.state.liveWall) Theme.state.useLiveWall = true;
+        else chooseVideo();
+    }
     function apply() {
         const s = Theme.state;
         s.wall = pick;
+        s.useLiveWall = false;
         s.wallLook = look;
         s.wallPitch = pitch;
         s.wallBright = bright;
@@ -133,6 +140,30 @@ magick "$1[0]" -resize "$3" -quality 90 "$2/.$b.jpg" 2>/dev/null && mv "$2/.$b.j
         onExited: {
             const f = root.fresh.slice().sort();
             if (f.join("\n") !== root.files.join("\n")) root.files = f;
+        }
+    }
+
+    Row {
+        z: 2
+        anchors { top: parent.top; horizontalCenter: parent.horizontalCenter; topMargin: 24 }
+        spacing: 12
+        scale: Math.min(0.45, parent.width / (width + 80))
+        transformOrigin: Item.Top
+        visible: Quickshell.env("GLYPH_FEDORA") === "1" && root.shown
+        Act {
+            icon: "\u{F0567}"
+            text: "Choose video"
+            onHit: { root.close(); root.chooseVideo(); }
+        }
+        Act {
+            icon: "\u{F02E9}"
+            text: Theme.state.useLiveWall ? "Use still wallpaper" : "Use live wallpaper"
+            onHit: {
+                if (Theme.state.useLiveWall) {
+                    Theme.state.useLiveWall = false;
+                    root.close();
+                } else root.useVideo();
+            }
         }
     }
 

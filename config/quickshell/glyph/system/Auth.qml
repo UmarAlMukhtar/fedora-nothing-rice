@@ -19,7 +19,12 @@ PanelWindow {
     Timer {
         running: true
         interval: 4000
-        onTriggered: if (!agent.isRegistered) Quickshell.execDetached(["sh", "-c", "pgrep -f polkit-gnome-authentication-agent >/dev/null || exec /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1"])
+        onTriggered: if (!agent.isRegistered) {
+            if (Quickshell.env("GLYPH_FEDORA") === "1")
+                Quickshell.execDetached(["lxqt-policykit-agent"]);
+            else
+                Quickshell.execDetached(["sh", "-c", "pgrep -f polkit-gnome-authentication-agent >/dev/null || exec /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1"]);
+        }
     }
     Connections {
         target: root.flow

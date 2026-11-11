@@ -1,5 +1,8 @@
 local scheme = require("scheme.demonshot")
 local home   = os.getenv("HOME")
+local osRelease = io.open("/etc/os-release", "r")
+local fedora = osRelease and ("\n" .. osRelease:read("*a")):find("\nID=fedora\n", 1, true) ~= nil
+if osRelease then osRelease:close() end
 
 -- DEMONSHOT_NESTED=1 Hyprland -c …/rice/config/hypr/hyprland.lua — a nested session for debugging:
 -- the system daemons already run outside
@@ -14,6 +17,7 @@ return {
     ------------------
 
     nested                     = nested,
+    fedora                     = fedora,
 
     -- Shell
     rice                       = rice,
@@ -30,7 +34,7 @@ return {
     -- workspace opens. telegram and spotify are extras in install.sh
     apps                       = {
         sysmon        = "kitty --class btop -T btop btop",
-        music         = "spotify-launcher",
+        music         = fedora and "command -v spotify >/dev/null && exec spotify; flatpak run com.spotify.Client" or "spotify-launcher",
         communication = "Telegram",
     },
 
@@ -84,12 +88,12 @@ return {
     ------------------
 
     -- Workspaces
-    kbMoveWinToWs              = "SUPER + ALT",
+    kbMoveWinToWs              = fedora and "SUPER + CTRL" or "SUPER + ALT",
     kbMoveWinToWsGroup         = "CTRL + SUPER + ALT",
     kbGoToWs                   = "SUPER",
-    kbGoToWsGroup              = "CTRL + SUPER",
-    kbNextWs                   = "CTRL + SUPER + Right",
-    kbPrevWs                   = "CTRL + SUPER + Left",
+    kbGoToWsGroup              = fedora and "ALT + SUPER" or "CTRL + SUPER",
+    kbNextWs                   = fedora and "SUPER + Right" or "CTRL + SUPER + Right",
+    kbPrevWs                   = fedora and "SUPER + Left" or "CTRL + SUPER + Left",
 
     -- Window Group
     kbWindowGroupCycleNext     = "ALT + TAB",
@@ -98,31 +102,31 @@ return {
     kbToggleGroup              = "SUPER + Comma",
 
     -- Window Action
-    kbResizeWindow             = "SUPER + X",
+    kbResizeWindow             = fedora and "SUPER + mouse:273" or "SUPER + X",
     kbWindowPip                = "SUPER + ALT + backslash",
-    kbPinWindow                = "SUPER + SHIFT + P", -- Super+P — the vpn pact
-    kbWindowFullscreen         = "SUPER + F",
+    kbPinWindow                = fedora and "ALT + S" or "SUPER + SHIFT + P", -- Super+P — the vpn pact
+    kbWindowFullscreen         = fedora and "ALT + F" or "SUPER + F",
     kbWindowBorderedFullscreen = "SUPER + ALT + F",
-    kbToggleWindowFloating     = "SUPER + ALT + space",
-    kbCloseWindow              = "SUPER + Q",
+    kbToggleWindowFloating     = fedora and "ALT + A" or "SUPER + ALT + space",
+    kbCloseWindow              = fedora and "SUPER + X" or "SUPER + Q",
 
     -- Special workspaces toggles
     kbSpecialWs                = "SUPER + S",
     kbSystemMonitorWs          = "CTRL + SHIFT + Escape",
-    kbMusicWs                  = "SUPER + M",
+    kbMusicWs                  = fedora and "SUPER + SHIFT + S" or "SUPER + M",
     kbCommunicationWs          = "SUPER + D",
-    kbTodoWs                   = "SUPER + R",
+    kbTodoWs                   = fedora and "SUPER + CTRL + R" or "SUPER + R",
 
     -- Apps
-    kbTerminal                 = "SUPER + T",
-    kbBrowser                  = "SUPER + W",
-    kbEditor                   = "SUPER + SHIFT + K",
-    kbFileExplorer             = "SUPER + E",
+    kbTerminal                 = fedora and "SUPER + Return" or "SUPER + T",
+    kbBrowser                  = fedora and "SUPER + B" or "SUPER + W",
+    kbEditor                   = fedora and "SUPER + E" or "SUPER + SHIFT + K",
+    kbFileExplorer             = fedora and "SUPER + F" or "SUPER + E",
 
     -- Misc
     kbSession                  = "CTRL + ALT + Delete",
-    kbPower                    = "SUPER + Escape",
-    kbAltar                    = "SUPER + Space",
+    kbPower                    = fedora and "SUPER + ALT + P" or "SUPER + Escape",
+    kbAltar                    = fedora and "SUPER + CTRL + D" or "SUPER + Space",
     kbLock                     = "SUPER + L",
     kbRestoreLock              = "SUPER + ALT + L",
 }

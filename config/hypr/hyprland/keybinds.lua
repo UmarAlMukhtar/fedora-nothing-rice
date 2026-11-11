@@ -15,7 +15,7 @@ for _, key in ipairs({
     -- Super+<key> binds below
     "Q", "W", "E", "R", "T", "A", "D", "F", "G", "K", "L", "C", "V", "M", "N", "P",
     "Z", "X", "U", "S", "H", "I", "space", "Escape",
-    "Comma", "Period", "Minus", "Equal", "Backslash",
+    "Comma", "Period", "Minus", "Equal", "Backslash", "Return",
     "left", "right", "up", "down",
     "Page_Up", "Page_Down", "F12", "Tab",
     "mouse:272", "mouse:273", "mouse:274", "mouse:275", "mouse:276", "mouse:277",
@@ -29,7 +29,7 @@ hl.bind(vars.kbAltar, hl.dsp.global("shell:altar"))
 hl.bind("SUPER + I", hl.dsp.global("shell:settings"))
 hl.bind("SUPER + Tab", hl.dsp.global("shell:overview")) -- workspace overview
 hl.bind("SUPER + N", hl.dsp.global("shell:ward"))
-hl.bind("SUPER + P", hl.dsp.global("shell:pact"))
+hl.bind(vars.fedora and "SUPER + CTRL + P" or "SUPER + P", hl.dsp.global("shell:pact"))
 hl.bind("SUPER + A", hl.dsp.global("shell:quick")) -- glyph quick settings
 hl.bind("SUPER + SHIFT + W", hl.dsp.global("shell:wall")) -- glyph wallpapers
 hl.bind(vars.kbSession, hl.dsp.global("shell:power"))
@@ -100,8 +100,13 @@ local kbLockGroup = hl.version():match("^0%.5[0-6]%.") and hl.dsp.group.lock_act
 hl.bind("SUPER + SHIFT + Comma", kbLockGroup)
 
 -- Window actions
-hl.bind("SUPER + left", hl.dsp.focus({ direction = "left" }))
-hl.bind("SUPER + right", hl.dsp.focus({ direction = "right" }))
+if vars.fedora then
+    hl.bind("SUPER + CTRL + Left", fn.wsstep(-1, true), { repeating = true })
+    hl.bind("SUPER + CTRL + Right", fn.wsstep(1, true), { repeating = true })
+else
+    hl.bind("SUPER + left", hl.dsp.focus({ direction = "left" }))
+    hl.bind("SUPER + right", hl.dsp.focus({ direction = "right" }))
+end
 hl.bind("SUPER + up", hl.dsp.focus({ direction = "up" }))
 hl.bind("SUPER + down", hl.dsp.focus({ direction = "down" }))
 hl.bind("SUPER + SHIFT + left", hl.dsp.window.move({ direction = "left" }))
@@ -112,14 +117,23 @@ hl.bind("SUPER + Minus", hl.dsp.window.resize(fn.resize_active_window(-10, 0)), 
 hl.bind("SUPER + Equal", hl.dsp.window.resize(fn.resize_active_window(10, 0)), { repeating = true })
 hl.bind("SUPER + SHIFT + Minus", hl.dsp.window.resize(fn.resize_active_window(0, -10)), { repeating = true })
 hl.bind("SUPER + SHIFT + Equal", hl.dsp.window.resize(fn.resize_active_window(0, 10)), { repeating = true })
-hl.bind("SUPER + ALT + left", hl.dsp.window.resize(fn.resize_active_window(-10, 0)), { repeating = true })
-hl.bind("SUPER + ALT + right", hl.dsp.window.resize(fn.resize_active_window(10, 0)), { repeating = true })
-hl.bind("SUPER + ALT + up", hl.dsp.window.resize(fn.resize_active_window(0, -10)), { repeating = true })
-hl.bind("SUPER + ALT + down", hl.dsp.window.resize(fn.resize_active_window(0, 10)), { repeating = true })
+if vars.fedora then
+    for _, direction in ipairs({ "left", "right", "up", "down" }) do
+        hl.bind("SUPER + ALT + " .. direction, hl.dsp.focus({ direction = direction }))
+    end
+else
+    hl.bind("SUPER + ALT + left", hl.dsp.window.resize(fn.resize_active_window(-10, 0)), { repeating = true })
+    hl.bind("SUPER + ALT + right", hl.dsp.window.resize(fn.resize_active_window(10, 0)), { repeating = true })
+    hl.bind("SUPER + ALT + up", hl.dsp.window.resize(fn.resize_active_window(0, -10)), { repeating = true })
+    hl.bind("SUPER + ALT + down", hl.dsp.window.resize(fn.resize_active_window(0, 10)), { repeating = true })
+end
 
 -- mouse: Super + drag — move the window (tiled and floating alike), hold Super+X and move — resize
 hl.bind("SUPER + mouse:272", hl.dsp.window.drag(), { mouse = true })
 hl.bind(vars.kbResizeWindow, hl.dsp.window.resize(), { mouse = true })
+if vars.fedora then
+    hl.window_rule({ match = { class = "^glyph-floating-terminal$" }, float = true, center = true })
+end
 hl.bind("CTRL + SUPER + Backslash", hl.dsp.window.center())
 hl.bind("CTRL + SUPER + ALT + Backslash", hl.dsp.window.resize(fn.resize_by_screen(55, 70)))
 hl.bind("CTRL + SUPER + ALT + Backslash", hl.dsp.window.center())
@@ -151,14 +165,43 @@ hl.bind(vars.kbTodoWs, fn.toggle_special("todo"))
 -- Apps
 hl.bind(vars.kbTerminal, hl.dsp.exec_cmd(vars.terminal))
 hl.bind(vars.kbBrowser, hl.dsp.exec_cmd(vars.browser))
-hl.bind(vars.kbEditor, function() if vars.apps.editor then hl.exec_cmd(vars.apps.editor) end end)
+hl.bind(vars.kbEditor, function()
+    if vars.apps.editor then
+        hl.exec_cmd(vars.apps.editor)
+    elseif vars.fedora then
+        hl.exec_cmd("command -v code >/dev/null && exec code; command -v codium >/dev/null && exec codium; notify-send 'Set an editor in Hyprland user.lua'")
+    end
+end)
 hl.bind(vars.kbFileExplorer, hl.dsp.exec_cmd(vars.fileExplorer))
 hl.bind("CTRL + ALT + V", hl.dsp.exec_cmd(vars.audioSettings))
 
 -- Utilities
 hl.bind("Print", hl.dsp.global("shell:shot"))
-hl.bind("SUPER + SHIFT + S", hl.dsp.global("shell:shot"))
-hl.bind("SUPER + ALT + R", fn.record(false, true))
+if not vars.fedora then hl.bind("SUPER + SHIFT + S", hl.dsp.global("shell:shot")) end
+if vars.fedora then
+    hl.bind("SUPER + ALT + R", hl.dsp.exec_cmd("hyprctl reload"))
+    hl.bind("SUPER + Escape", hl.dsp.exec_cmd("hyprctl reload"))
+    hl.bind("SUPER + Space", hl.dsp.global("shell:launcherOpen"))
+    hl.bind("SUPER + C", hl.dsp.exec_cmd("command -v chatgpt >/dev/null && exec chatgpt; xdg-open https://chatgpt.com/"))
+    hl.bind("SUPER + V", hl.dsp.exec_cmd("command -v vlc >/dev/null && exec vlc; notify-send 'VLC is not installed'"))
+    hl.bind("SUPER + ALT + W", hl.dsp.global("shell:wall"))
+    hl.bind("SUPER + R", hl.dsp.global("shell:customize"))
+    hl.bind("ALT + Space", hl.dsp.global("shell:customize"))
+    hl.bind("SUPER + Y", hl.dsp.exec_cmd("command -v yazi >/dev/null && exec kitty yazi; notify-send 'Install yazi to use this shortcut'"))
+    hl.bind("SUPER + M", hl.dsp.exec_cmd("command -v ncmpcpp >/dev/null && exec kitty ncmpcpp; notify-send 'Install ncmpcpp to use this shortcut'"))
+    hl.bind("SUPER + T", fn.toggle_special("communication"))
+    hl.bind("SUPER + W", hl.dsp.exec_cmd("xdg-open https://web.whatsapp.com/"))
+    hl.bind("SUPER + P", hl.dsp.exec_cmd(vars.audioSettings))
+    hl.bind("SUPER + ALT + N", hl.dsp.global("shell:network"))
+    hl.bind("SUPER + ALT + B", hl.dsp.global("shell:bluetooth"))
+    hl.bind("SUPER + SHIFT + P", hl.dsp.exec_cmd("command -v scrcpy >/dev/null && exec scrcpy; notify-send 'Install scrcpy to mirror Android'"))
+    hl.bind("F7", hl.dsp.global("shell:display"))
+    hl.bind("SUPER + ALT + Return", hl.dsp.exec_cmd("kitty --class glyph-floating-terminal"))
+    hl.bind("SHIFT + Print", hl.dsp.global("shell:shot"))
+    hl.bind("SUPER + ALT + S", hl.dsp.global("shell:shot"))
+else
+    hl.bind("SUPER + ALT + R", fn.record(false, true))
+end
 hl.bind("CTRL + ALT + R", fn.record(false, false))
 hl.bind("SUPER + SHIFT + ALT + R", fn.record(true, false))
 hl.bind("SUPER + SHIFT + C", hl.dsp.exec_cmd("hyprpicker -a"))
@@ -190,7 +233,7 @@ hl.bind(
 hl.bind("SUPER + SHIFT + L", hl.dsp.exec_cmd(vars.sleepGestureCmd), { locked = true })
 
 -- Clipboard
-hl.bind("SUPER + V", hl.dsp.global("shell:clip"))
+hl.bind(vars.fedora and "SUPER + SHIFT + V" or "SUPER + V", hl.dsp.global("shell:clip"))
 hl.bind("SUPER + Period", hl.dsp.global("shell:charms"))
 hl.bind(
     "CTRL + SHIFT + ALT + V",

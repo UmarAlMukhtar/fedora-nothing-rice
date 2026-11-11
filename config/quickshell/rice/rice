@@ -16,6 +16,7 @@ cur=$(cat "$state/shell" 2>/dev/null)
 # launch, open cava (USR1) and btop (USR2) reload on a signal, gtk — on a theme change (we flip it back and forth),
 # qt (qtengine.colors from ~/.config/qtengine/config.json) — on the next launch. A real file (not a link) is left alone
 term() {
+    [ "${GLYPH_FEDORA:-}" != 1 ] || return 0
     for f in starship.toml fastfetch cava btop gtk-3.0/gtk.css gtk-4.0/gtk.css qtengine.colors; do
         [ -e "$q/$1/term/$f" ] || continue
         [ -L "$HOME/.config/$f" ] || [ ! -e "$HOME/.config/$f" ] || continue

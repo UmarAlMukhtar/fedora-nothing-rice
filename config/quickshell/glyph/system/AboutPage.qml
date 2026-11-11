@@ -11,6 +11,7 @@ import "../prefs"
 Page {
     id: root
     property bool live
+    readonly property bool fedora: Quickshell.env("GLYPH_FEDORA") === "1"
     caption: `about · ${info.host ?? ""}`
 
     property var info: ({})
@@ -71,7 +72,9 @@ echo "qs=$(qs --version 2>/dev/null | head -n1 | sed -E 's/^[Qq]uickshell ([^ ]+
     }
     Process {
         id: upd
-        command: ["sh", "-c", "command -v checkupdates >/dev/null && checkupdates 2>/dev/null; a=$(command -v yay || command -v paru); [ -n \"$a\" ] && \"$a\" -Qua 2>/dev/null | sed 's/^/aur:/'; true"]
+        command: root.fedora
+            ? ["dnf5", "-q", "--cacheonly", "repoquery", "--upgrades", "--queryformat", "%{name} %{evr}\n"]
+            : ["sh", "-c", "command -v checkupdates >/dev/null && checkupdates 2>/dev/null; a=$(command -v yay || command -v paru); [ -n \"$a\" ] && \"$a\" -Qua 2>/dev/null | sed 's/^/aur:/'; true"]
         stdout: StdioCollector {
             onStreamFinished: {
                 root.updates = text.split("\n").filter(Boolean);
@@ -145,7 +148,7 @@ echo "qs=$(qs --version 2>/dev/null | head -n1 | sed -E 's/^[Qq]uickshell ([^ ]+
             }
         }
         Act { anchors.verticalCenter: parent.verticalCenter; icon: "\u{F0450}"; text: "check"; onHit: if (!root.checking) root.check() }
-        Act { anchors.verticalCenter: parent.verticalCenter; visible: root.updates.length > 0 || root.riceNew > 0; icon: "\u{F06B0}"; text: "update everything"; onHit: root.update() }
+        Act { anchors.verticalCenter: parent.verticalCenter; visible: root.fedora || root.updates.length > 0 || root.riceNew > 0; icon: "\u{F06B0}"; text: "update everything"; onHit: root.update() }
     }
     Row {
         spacing: 20
@@ -166,7 +169,7 @@ echo "qs=$(qs --version 2>/dev/null | head -n1 | sed -E 's/^[Qq]uickshell ([^ ]+
                 root.done();
             }
         }
-        Act { icon: "\u{F0341}"; text: "change login screen"; onHit: root.changeLogin() }
+        Act { visible: !root.fedora; icon: "\u{F0341}"; text: "change login screen"; onHit: root.changeLogin() }
     }
     Flickable {
         visible: root.updates.length > 0

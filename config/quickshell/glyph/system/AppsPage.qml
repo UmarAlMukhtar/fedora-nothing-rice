@@ -190,7 +190,7 @@ done`]
                 }
             }
             // the row for files: Thunar, Dolphin and Strata can be installed from here
-            Act { visible: root.sel === 1; icon: "\u{F0415}"; text: "install or switch file manager"; onHit: root.moreFileManagers() }
+            Act { visible: root.sel === 1 && Quickshell.env("GLYPH_FEDORA") !== "1"; icon: "\u{F0415}"; text: "install or switch file manager"; onHit: root.moreFileManagers() }
         }
     }
 }

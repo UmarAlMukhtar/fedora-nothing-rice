@@ -35,8 +35,8 @@ ShellRoot {
     // screen at once, the vpn watches for sign-in pages in the background. The rest — Lazy: built when first opened, freed later
     Launcher { id: launcher }
     Quick { id: quick; onPowerRequested: power.get().open(); onSettingsRequested: system.get().open() }
-    Agent {} // bluetooth and network ask for a code or password — a window (system/agent.py)
-    Auth {} // polkit asks for your password (pkexec, firewall, battery, hostname) — above every panel
+    LazyLoader { active: !shell.preview; Agent {} } // bluetooth and network ask for a code or password — a window (system/agent.py)
+    LazyLoader { active: !shell.preview; Auth {} } // polkit asks for your password (pkexec, firewall, battery, hostname) — above every panel
     Glyph {}
     Buds {}
     Deck { id: deck }
@@ -45,7 +45,7 @@ ShellRoot {
     LazyLoader { active: !Theme.state.welcomed; Welcome {} }
     // nothing else on Hyprland mounts a plugged-in drive. udiskie skips internal disks, and -n reports through the usual notifications
     Process {
-        running: Theme.state.autoMount
+        running: Theme.state.autoMount && !shell.preview
         command: ["sh", "-c", "command -v udiskie >/dev/null || exit 0; pkill -x -u \"$(id -u)\" udiskie; exec udiskie -a -n -T"] // a restart can leave the last one running
     }
     Lazy { id: overview; component: Overview { onSettingsRequested: system.get().openAt("WORKSPACES") } } // Super+Tab: all workspaces and windows, drag a window onto a workspace
@@ -55,7 +55,22 @@ ShellRoot {
     Lazy { id: cal; component: Cal {} }
     Lazy { id: clip; component: Clip {} }
     Lazy { id: charms; component: Charms {} }
-    Lazy { id: walls; component: Walls {} }
+    Lazy { id: walls; component: Walls { onChooseVideo: videoPicker.running = true } }
+    Process {
+        id: videoPicker
+        command: ["zenity", "--file-selection", "--title=Choose a live wallpaper",
+                  "--file-filter=Video files | *.mp4 *.mkv *.webm *.mov *.gif"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const path = text.replace(/\r?\n$/, "");
+                if (path.startsWith("/") && !path.includes("\n")) {
+                    Theme.state.liveWall = path;
+                    Theme.state.useLiveWall = true;
+                }
+            }
+        }
+    }
+    readonly property bool preview: Quickshell.env("DEMONSHOT_NESTED") === "1"
     readonly property bool gaming: Game.on // a singleton only lives once something touches it
     function togglePower() { const p = power.get(); p.visible ? p.close() : p.open(); }
 
@@ -82,8 +97,7 @@ ShellRoot {
     Component.onCompleted: {
         hypr();
         Theme.apps(); // rice start puts the links back on term/ — the color has to return; waits for the login to settle
-        Rules.night();
-        Rules.idle();
+        if (!preview) { Rules.night(); Rules.idle(); }
     }
     // what lives in the hypr config. It reloads it by itself: any hypr file saved (the links are live — both git pull and a branch
     // switch), hyprctl reload — and it returns the variables.lua defaults: demonshot borders, monitor, input, animations. We lay
@@ -151,6 +165,11 @@ ShellRoot {
             shell.interrupted = false;
         }
     }
+    Shortcut { name: "launcherOpen"; description: "app launcher"; onPressed: launcher.toggle() }
+    Shortcut { name: "customize"; description: "customize Glyph"; onPressed: prefs.get().open() }
+    Shortcut { name: "network"; description: "network settings"; onPressed: system.get().openAt("NETWORK") }
+    Shortcut { name: "bluetooth"; description: "Bluetooth settings"; onPressed: system.get().openAt("BLUETOOTH") }
+    Shortcut { name: "display"; description: "display settings"; onPressed: system.get().openAt("DISPLAY") }
     Shortcut { name: "launcherArm"; description: "Super pressed — reset the interrupt"; onPressed: shell.interrupted = false }
     Shortcut { name: "launcherInterrupt"; description: "Super+<key> — don't open the launcher"; onPressed: shell.interrupted = true }
     // Super+Space (the altar in demonshot) — deck, the bottom dashboard: the launcher is on a Super tap anyway

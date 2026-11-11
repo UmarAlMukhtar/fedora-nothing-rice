@@ -9,7 +9,17 @@ import "../prefs"
 PanelWindow {
     id: root
 
-    readonly property var keys: [
+    readonly property var keys: Quickshell.env("GLYPH_FEDORA") === "1" ? [
+        ["Super + Space", "launcher, apps and search"], ["Super + Return", "terminal"],
+        ["Super + I", "system: wifi, bluetooth, sound"], ["Super + A", "quick settings"],
+        ["Super + Tab", "workspace overview"], ["Super + Ctrl + D", "dashboard"],
+        ["Super + B", "browser"], ["Super + F", "files"],
+        ["Super + Alt + W", "wallpapers"], ["Super + Shift + V", "clipboard"],
+        ["Print", "screenshot"], ["Super + Period", "emoji"],
+        ["Super + X", "close a window"], ["Super + Left / Right", "switch workspace"],
+        ["Super + left drag", "move a window"], ["Super + right drag", "resize a window"],
+        ["Super + L", "lock"], ["Super + Alt + P", "power menu"]
+    ] : [
         ["Super", "launcher, apps and search"], ["Super + T", "terminal"],
         ["Super + I", "system: wifi, bluetooth, sound"], ["Super + A", "quick settings"],
         ["Super + Tab", "workspace overview"], ["Super + Space", "dashboard"],

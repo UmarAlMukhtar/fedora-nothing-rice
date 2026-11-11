@@ -15,6 +15,10 @@
 #   ./install.sh --sddm        only the SDDM login theme; run again after edits in config/sddm
 set -Eeuo pipefail
 
+if grep -qx 'ID=fedora' /etc/os-release; then
+    exec "$(dirname -- "$(readlink -f -- "$0")")/fedora/install.sh" "$@"
+fi
+
 DOTS="$(cd "$(dirname "$0")" && pwd)"
 BACKUP="$HOME/.dots-backup-$(date +%F_%H-%M-%S)"
 STATE="${XDG_STATE_HOME:-$HOME/.local/state}/rice"

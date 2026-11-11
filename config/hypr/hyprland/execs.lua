@@ -8,6 +8,10 @@ hl.on("hyprland.start", function()
     -- in a nested session the system daemons already run outside
     if vars.nested then return end
 
+    if vars.fedora then
+        hl.exec_cmd("dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE HYPRLAND_INSTANCE_SIGNATURE")
+    end
+
     -- Keyring and auth
     hl.exec_cmd("gnome-keyring-daemon --start --components=secrets")
     -- the password prompt: glyph has its own (system/Auth.qml, above its panels), other shells — polkit-gnome.
@@ -19,15 +23,18 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("wl-paste --type image --watch cliphist store")
 
     -- Auto delete trash 30 days old
-    hl.exec_cmd("trash-empty 30")
+    if not vars.fedora then hl.exec_cmd("trash-empty 30") end
 
     -- Cursors
     hl.exec_cmd("hyprctl setcursor " .. vars.cursorTheme .. " " .. vars.cursorSize)
-    hl.exec_cmd("gsettings set org.gnome.desktop.interface cursor-theme " .. vars.cursorTheme)
-    hl.exec_cmd("gsettings set org.gnome.desktop.interface cursor-size " .. vars.cursorSize)
+    if not vars.fedora then
+        hl.exec_cmd("gsettings set org.gnome.desktop.interface cursor-theme " .. vars.cursorTheme)
+        hl.exec_cmd("gsettings set org.gnome.desktop.interface cursor-size " .. vars.cursorSize)
+    end
 
     -- Location provider
-    hl.exec_cmd("/usr/lib/geoclue-2.0/demos/agent")
+    hl.exec_cmd(vars.fedora and "sh -c 'test ! -x /usr/libexec/geoclue-2.0/demos/agent || exec /usr/libexec/geoclue-2.0/demos/agent'"
+        or "/usr/lib/geoclue-2.0/demos/agent")
 
     -- Forward bluetooth media commands to MPRIS
     hl.exec_cmd("mpris-proxy")
