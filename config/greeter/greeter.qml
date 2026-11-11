@@ -11,7 +11,7 @@ ShellRoot {
     id: shell
     settings.watchFiles: false
 
-    property var sessions: [] // [{ name, exec }] from /usr/share/wayland-sessions
+    property var sessions: [] // [{ name, exec, type, desktop }]
     property var users: []    // human logins from passwd
     property int session: 0
     property int user: 0
@@ -37,14 +37,14 @@ ShellRoot {
 
     Process {
         running: true
-        command: ["sh", "-c", "for f in /usr/share/wayland-sessions/*.desktop; do printf '%s\\t%s\\n' \"$(grep -m1 '^Name=' \"$f\" | cut -d= -f2-)\" \"$(grep -m1 '^Exec=' \"$f\" | cut -d= -f2-)\"; done"]
+        command: ["sh", "-c", "field() { sed -n \"s/^$1=//p\" \"$2\" | head -n1; }\nfor f in /usr/share/wayland-sessions/*.desktop; do\n    [ -r \"$f\" ] || continue\n    try_exec=$(field TryExec \"$f\")\n    [ -z \"$try_exec\" ] || command -v \"$try_exec\" >/dev/null 2>&1 || continue\n    desktop=$(field DesktopNames \"$f\" | sed 's/;$//; s/;/:/g')\n    printf '%s\\t%s\\t%s\\t%s\\n' \"$(field Name \"$f\")\" \"$(field Exec \"$f\")\" wayland \"${desktop:-${f##*/}}\"\ndone\nif [ \"$GLYPH_FEDORA_GREETER\" = 1 ] && [ -x /usr/bin/startx ] && [ -x /usr/bin/bspwm ]; then\n    printf '%s\\t%s\\t%s\\t%s\\n' 'bspwm (X11)' '/usr/bin/startx /etc/X11/xinit/Xsession bspwm -- -seat \"${XDG_SEAT:-seat0}\" -keeptty \"vt${XDG_VTNR}\" -nolisten tcp' x11 bspwm\nfi"]
         stdout: StdioCollector {
             onStreamFinished: {
                 // desktop-entry field codes (%U and co) mean nothing to a session
-                const s = text.split("\n").map(l => l.split("\t")).filter(p => p[1]).map(p => ({ name: p[0], exec: p[1].replace(/ ?%[A-Za-z]/g, "") }));
+                const s = text.split("\n").map(l => l.split("\t")).filter(p => p[1]).map(p => ({ name: p[0], exec: p[1].replace(/ ?%[A-Za-z]/g, ""), type: p[2], desktop: p[3] }));
                 const names = s.map(x => x.name);
                 shell.sessions = s;
-                shell.session = shell.pick(names, last.session, Math.max(0, names.findIndex(n => /uwsm/i.test(n))));
+                shell.session = shell.pick(names, last.session, Math.max(0, Quickshell.env("GLYPH_FEDORA_GREETER") === "1" ? names.indexOf("Hyprland") : names.findIndex(n => /uwsm/i.test(n))));
             }
         }
     }
@@ -96,7 +96,15 @@ ShellRoot {
     }
     // greetd joins the command with spaces and runs it through sh, so Exec goes in whole and that shell parses it.
     // greetd drops the session's output; systemd-cat keeps it: journalctl -t glyph-session
-    Timer { id: launchT; interval: 470; onTriggered: Greetd.launch(["systemd-cat", "-t", "glyph-session", shell.sessions[shell.session].exec]) }
+    Timer {
+        id: launchT
+        interval: 470
+        onTriggered: {
+            const session = shell.sessions[shell.session];
+            Greetd.launch(["systemd-cat", "-t", "glyph-session", session.exec],
+                          [`XDG_SESSION_TYPE=${session.type}`, `XDG_CURRENT_DESKTOP=${session.desktop}`, `XDG_SESSION_DESKTOP=${session.desktop}`]);
+        }
+    }
 
     // cage shows it full screen; anywhere else it is a plain window
     FloatingWindow {

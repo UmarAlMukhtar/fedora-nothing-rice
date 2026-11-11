@@ -158,7 +158,7 @@ hl.bind(vars.kbCloseWindow, hl.dsp.window.close())
 -- Special workspace toggles
 hl.bind(vars.kbSpecialWs, fn.toggle_special("special"))
 hl.bind(vars.kbSystemMonitorWs, fn.toggle_special("sysmon"))
-hl.bind(vars.kbMusicWs, fn.toggle_special("music"))
+hl.bind(vars.kbMusicWs, function() fn.spotify(true) end)
 hl.bind(vars.kbCommunicationWs, fn.toggle_special("communication"))
 hl.bind(vars.kbTodoWs, fn.toggle_special("todo"))
 
@@ -183,7 +183,7 @@ if vars.fedora then
     hl.bind("SUPER + Escape", hl.dsp.exec_cmd("hyprctl reload"))
     hl.bind("SUPER + Space", hl.dsp.global("shell:launcherOpen"))
     hl.bind("SUPER + C", hl.dsp.exec_cmd("command -v chatgpt >/dev/null && exec chatgpt; xdg-open https://chatgpt.com/"))
-    hl.bind("SUPER + V", hl.dsp.exec_cmd("command -v vlc >/dev/null && exec vlc; notify-send 'VLC is not installed'"))
+    hl.bind("SUPER + SHIFT + V", hl.dsp.exec_cmd("command -v vlc >/dev/null && exec vlc; notify-send 'VLC is not installed'"))
     hl.bind("SUPER + ALT + W", hl.dsp.global("shell:wall"))
     hl.bind("SUPER + R", hl.dsp.global("shell:customize"))
     hl.bind("ALT + Space", hl.dsp.global("shell:customize"))
@@ -233,7 +233,7 @@ hl.bind(
 hl.bind("SUPER + SHIFT + L", hl.dsp.exec_cmd(vars.sleepGestureCmd), { locked = true })
 
 -- Clipboard
-hl.bind(vars.fedora and "SUPER + SHIFT + V" or "SUPER + V", hl.dsp.global("shell:clip"))
+hl.bind("SUPER + V", hl.dsp.global("shell:clip"))
 hl.bind("SUPER + Period", hl.dsp.global("shell:charms"))
 hl.bind(
     "CTRL + SHIFT + ALT + V",

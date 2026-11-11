@@ -9,15 +9,29 @@ home=$(getent passwd "$me" | cut -d: -f6)
 here=$(dirname "$(readlink -f "$0")")
 glyph=$(readlink -f "$home/.config/quickshell/glyph")
 dst=/var/lib/greetd # root-owned: shell copy and state. home/ is the greeter user's own (cache, last pick)
+greeter_home="$dst/home"
+greeter_user=greeter
+greeter_config="$here/config.toml"
 
-pacman -S --needed --noconfirm greetd cage
+. /etc/os-release
+if [ "$ID" = fedora ]; then
+    dnf5 --repo=fedora --repo=updates install greetd greetd-selinux cage
+    dst=/etc/greetd/glyph
+    greeter_home=/var/lib/greetd/glyph-home
+    greeter_user=greetd
+    greeter_config="$here/../../fedora/greetd.toml"
+else
+    pacman -S --needed --noconfirm greetd cage
+fi
 
 # shell: a copy of glyph plus the greeter. LockView is LockSurface without WlSessionLock, user and avatar passed in
-rm -rf "$dst/shell" "$dst/state"
-mkdir -p "$dst/state/rice" "$dst/home/.cache/glyph/walls"
-cp -r "$glyph" "$dst/shell"
-cp "$here/greeter.qml" "$dst/shell/"
-view="$dst/shell/lock/LockView.qml"
+mkdir -p "$dst"
+stage=$(mktemp -d "$dst/.setup.XXXXXXXX")
+trap 'rm -rf "$stage"' EXIT
+mkdir -p "$stage/state/rice"
+cp -r "$glyph" "$stage/shell"
+cp "$here/greeter.qml" "$stage/shell/"
+view="$stage/shell/lock/LockView.qml"
 sed -e 's/^WlSessionLockSurface {/Item {/' \
     -e 's/text: Quickshell.env("USER")/text: root.user/' \
     -e 's|url: `file://${Quickshell.env("HOME")}/.face`|url: root.face|' \
@@ -34,24 +48,43 @@ done
 
 # theme state and the wallpaper's screen-sized copy; no notification count before login
 # nothing there yet on a first install: the greeter starts from the defaults
-state="$home/.local/state/rice/glyph.json"
-[ -r "$state" ] || state=/dev/null
-jq -n --slurpfile s "$state" '($s[0] // {}) + { unread: 0 }' > "$dst/state/rice/glyph.json"
-wall=$(jq -r '.wall // ""' "$dst/state/rice/glyph.json")
-[ -n "$wall" ] && cp "$home/.cache/glyph/walls/${wall##*/}.jpg" "$dst/home/.cache/glyph/walls/" 2>/dev/null || true
+if [ "$ID" = fedora ]; then
+    if [ -f "$dst/state/rice/glyph.json" ]; then
+        cp "$dst/state/rice/glyph.json" "$stage/state/rice/glyph.json"
+    else
+        printf '{"unread":0}\n' > "$stage/state/rice/glyph.json"
+    fi
+else
+    state="$home/.local/state/rice/glyph.json"
+    [ -r "$state" ] || state=/dev/null
+    jq -n --slurpfile s "$state" '($s[0] // {}) + { unread: 0 }' > "$stage/state/rice/glyph.json"
+    wall=$(jq -r '.wall // ""' "$stage/state/rice/glyph.json")
+    mkdir -p "$greeter_home/.cache/glyph/walls"
+    [ -n "$wall" ] && cp "$home/.cache/glyph/walls/${wall##*/}.jpg" "$greeter_home/.cache/glyph/walls/" 2>/dev/null || true
+fi
 
 # fonts the greeter user can't read from your home
 install -Dm644 -t /usr/share/fonts/glyph "$here/../fonts/"*.[ot]tf
 fc-cache -f /usr/share/fonts/glyph
 [ -f "$home/.face" ] && install -Dm644 "$home/.face" "/var/lib/AccountsService/icons/$me" || true
 
-chown -R root:root "$dst"
-chmod -R a+rX "$dst"
-chown -R greeter:greeter "$dst/home"
-usermod -d "$dst/home" greeter
+chown -R root:root "$stage/shell" "$stage/state"
+chmod -R a+rX "$stage/shell" "$stage/state"
+rm -rf "$dst/shell" "$dst/state"
+mv "$stage/shell" "$stage/state" "$dst/"
+if [ "$ID" = fedora ]; then
+    install -d -m700 -o "$greeter_user" -g "$greeter_user" "$greeter_home"
+    restorecon -R "$dst" "$greeter_home"
+else
+    chown root:root "$dst"
+    chmod a+rx "$dst"
+    chown -R "$greeter_user:$greeter_user" "$greeter_home"
+    usermod -d "$greeter_home" "$greeter_user"
+fi
 
 [ -f /etc/greetd/config.toml ] && cp /etc/greetd/config.toml /etc/greetd/config.toml.bak
-install -m644 "$here/config.toml" /etc/greetd/config.toml
+install -m644 "$greeter_config" /etc/greetd/config.toml
+if [ "$ID" = fedora ]; then restorecon /etc/greetd/config.toml; fi
 
 echo "installed. greetd reads its config only at start: reboot to apply config.toml changes"
-systemctl -q is-enabled greetd || echo "if you ran this by hand, switch to it with:  sudo systemctl disable sddm && sudo systemctl enable greetd"
+systemctl -q is-enabled greetd || echo "switch to it at the next boot with: sudo systemctl enable --force greetd.service"

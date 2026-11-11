@@ -289,6 +289,12 @@ Scope {
                 id: mediaC
                 Column {
                     width: 240
+                    TapHandler {
+                        onTapped: point => {
+                            if (!mediaControls.contains(mediaControls.mapFromItem(null, point.scenePosition)))
+                                Media.spotify(true);
+                        }
+                    }
                     Lb { width: parent.width; elide: Text.ElideRight; text: Media.player?.identity ?? "silence" }
                     Item { width: 1; height: 12 }
                     Row {
@@ -328,7 +334,7 @@ Scope {
                         Lb { y: 8; anchors.right: parent.right; visible: !!Media.player?.lengthSupported; text: Media.time(Media.player?.length); px: 11 }
                     }
                     Item { width: 1; height: 8 }
-                    Controls { anchors.horizontalCenter: parent.horizontalCenter; size: 20; play: 48 }
+                    Controls { id: mediaControls; anchors.horizontalCenter: parent.horizontalCenter; size: 20; play: 48 }
                 }
             }
         }

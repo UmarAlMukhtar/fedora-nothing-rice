@@ -16,6 +16,12 @@ DNF asks for administrator access and shows the package transaction before apply
 
 Log out and choose **Hyprland** from your login screen's session menu. If your login manager doesn't list Wayland sessions, switch to a text console with **Ctrl+Alt+F3**, log in, and run `start-hyprland`. To return to your previous desktop, exit Hyprland and choose your usual session. Use `./install.sh --dry-run` to preview the link targets, or `--links` when the packages are already installed.
 
+### Optional Glyph login screen
+
+After installing the rice, run `sudo ./config/greeter/install.sh` to install the Glyph Lock greeter. To select it for the next boot, run `sudo systemctl enable --force greetd.service`. Save your work before rebooting. The session picker offers Hyprland and, if installed, bspwm (X11).
+
+To restore your previous login manager from a text console, re-enable its service with `sudo systemctl enable --force lightdm.service` (use the service you previously used) and reboot.
+
 ## Wallpaper
 
 Open **Super+Alt+W** and choose a bundled still wallpaper, or select **Choose video** to use a local MP4 or WebM. **Use still wallpaper** returns to your last Glyph image, and **Use live wallpaper** brings back the selected video. Lite mode skips video playback. The player is muted, and pauses per monitor when the workspace has windows. Codec support depends on your Fedora media packages. An unreadable video falls back to the still background.
@@ -29,8 +35,8 @@ Your selected video stays on your computer. The repo ships the original Glyph ar
 | Super+Space | App launcher |
 | Super+Return / Super+Alt+Return | Terminal / floating terminal |
 | Super+B / Super+E / Super+F | Default browser / editor / default file manager |
-| Super+C / Super+V | ChatGPT / VLC |
-| Super+Shift+V | Clipboard history |
+| Super+C / Super+Shift+V | ChatGPT / VLC |
+| Super+V | Clipboard history |
 | Super+Left / Right | Previous / next workspace |
 | Super+1–9 / Super+Ctrl+1–9 | Switch / move a window to a workspace |
 | Super+Alt+Arrow | Focus a window in that direction |
@@ -46,10 +52,22 @@ Your selected video stays on your computer. The repo ships the original Glyph ar
 
 The app keys use the system default or the installed app where possible. Set personal overrides in `~/.config/hypr/user.lua` (gitignored). bspwm-specific scripts such as xwinwrap, Polybar actions, and the original PiP helpers stay with the bspwm session. Glyph has its own window rules and clipboard history.
 
+## Picture-in-picture and screen sharing
+
+Hyprland pins picture-in-picture windows across workspaces and restores their size and position. Use **Super+left drag** to move and **Super+right drag** to resize.
+
+Brave's automatic PiP can also open when you switch workspaces. With native Brave and automatic PiP enabled for the video site:
+
+1. Open `brave://extensions`, enable **Developer mode**, and use **Load unpacked** to select `fedora/brave-pip/desktop-extension` from this checkout.
+2. Copy the extension's ID and run `python3 fedora/brave-pip/register.py EXTENSION_ID` from the checkout. The script preserves an existing registration.
+3. Reload the extension, play an audible video, and switch workspaces. The extension checks playback on HTTPS pages and uses a temporary tab to trigger Brave's native PiP. Site and browser support for automatic PiP still applies.
+
+The Fedora installer sets up the Hyprland graphical session target for PipeWire screen sharing. Choose a **Window** in your app's share picker to keep other workspaces private.
+
 ## Updates and removal
 
 Run `./install.sh --update` to fast-forward the checkout and refresh the dependencies. System → About can also run the rice update and Fedora's normal DNF upgrade. System → Firewall reports firewalld's state and opens Fedora's firewall UI when `firewall-config` is installed. Existing file managers remain selectable under System → Apps.
 
-The Arch login-theme installer is separate. This Fedora installer keeps your current greeter. Optional upstream integrations such as GPU Screen Recorder and Clash Verge need their own packages.
+Optional upstream integrations such as GPU Screen Recorder and Clash Verge need their own packages.
 
-Run `./install.sh --uninstall` to remove this checkout's four configuration links. Switch to your previous desktop before uninstalling. Installed packages, saved preferences, and wallpapers remain.
+Run `./install.sh --uninstall` to remove this checkout's configuration links. Switch to your previous desktop before uninstalling. Installed packages, saved preferences, and wallpapers remain.

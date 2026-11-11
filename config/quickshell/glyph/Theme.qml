@@ -316,13 +316,13 @@ Singleton {
     function apply() {
         // colors — the target ones (greys), not the ones halfway through the animation
         const [bg, s1, s2, s3, mute, grey, fg] = greys, ink = pal.light ? s1 : bg;
-        // game mode (Rules.store.game) — on top of the settings, like ultra: border 1, no gaps or rounding, tearing for
+        // game mode (Rules.store.game) — on top of the settings, like ultra: no gaps or rounding, tearing for
         // windows with immediate (games, hyprland/rules.lua). On leaving — your values come back, allow_tearing — false, as in general.lua
         const r = Rules.store, g = r.game, flat = g && !r.gameGaps;
         const c = x => `"rgb(${hex(x)})"`;
         // shadow: in dark — a barely visible white glow, in light — a soft dark one (fg: with the wallpaper — its deep tone)
         const shadow = light ? `rgba(${hex(fg)}2E)` : `rgba(${hex(fg)}1A)`;
-        hypr(`hl.config({ general = { gaps_in = ${flat ? 0 : r.gapsIn}, gaps_out = ${flat ? 0 : r.gapsOut}, border_size = ${flat ? 1 : r.border}, allow_tearing = ${g}, `
+        hypr(`hl.config({ general = { gaps_in = ${flat ? 0 : r.gapsIn}, gaps_out = ${flat ? 0 : r.gapsOut}, border_size = ${r.border}, allow_tearing = ${g}, `
            + `col = { active_border = ${c(fg)}, inactive_border = ${c(s3)} } }, `
            + `decoration = { rounding = ${flat ? 0 : st.rounding}, blur = { enabled = ${Rules.blurOn && !st.lite} }, shadow = { enabled = ${Rules.shadowOn && !st.lite}, color = "${shadow}" } }, `
            + `group = { col = { border_active = ${c(fg)}, border_inactive = ${c(s3)}, border_locked_active = ${c(fg)}, border_locked_inactive = ${c(mute)} }, `

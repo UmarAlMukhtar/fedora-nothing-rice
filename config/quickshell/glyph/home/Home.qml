@@ -207,6 +207,12 @@ PanelWindow {
             id: playerW
             W {
                 span: 2
+                TapHandler {
+                    onTapped: point => {
+                        if (!playerControls.contains(playerControls.mapFromItem(null, point.scenePosition)))
+                            Media.spotify(true);
+                    }
+                }
                 Item {
                     id: art
                     x: 28
@@ -240,7 +246,7 @@ PanelWindow {
                     Item { width: 1; height: 18 }
                     Seg { width: parent.width; height: 6; n: 24; f: root.player?.lengthSupported && root.player.length > 0 ? Media.position / root.player.length : 0 } // firefox doesn't send the length
                     Item { width: 1; height: 16 }
-                    Controls { size: 22; play: 52 }
+                    Controls { id: playerControls; size: 22; play: 52 }
                 }
             }
         }

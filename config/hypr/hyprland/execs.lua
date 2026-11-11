@@ -9,7 +9,7 @@ hl.on("hyprland.start", function()
     if vars.nested then return end
 
     if vars.fedora then
-        hl.exec_cmd("dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE HYPRLAND_INSTANCE_SIGNATURE")
+        hl.exec_cmd("dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE HYPRLAND_INSTANCE_SIGNATURE && systemctl --user start hyprland-session.target")
     end
 
     -- Keyring and auth
@@ -42,25 +42,21 @@ hl.on("hyprland.start", function()
     -- the shell starts hypridle (Rules.idle): timings from house rules → ~/.config/demonshot/hypridle.conf
 end)
 
--- Resizer listener
-hl.on("window.title", function(win)
+if vars.fedora and not vars.nested then
+    hl.on("hyprland.shutdown", function()
+        os.execute("systemctl --user --no-block stop hyprland-session.target")
+    end)
+end
+
+local function configure_window(win)
     local d = {
         hl.dsp.window.float({ action = "on", window = win }),
         hl.dsp.window.center({ window = win }),
     }
-    local pip = fn.move_actions(win) or {}
-
     fn.resizer(win, "Bitwarden", 20, 54, d, true)
-    fn.resizer(win, "Picture[- ]in[- ][Pp]icture", 0, 0, pip, false)
-end)
+    fn.restore_pip(win)
+end
 
-hl.on("window.open", function(win)
-    local d = {
-        hl.dsp.window.float({ action = "on", window = win }),
-        hl.dsp.window.center({ window = win }),
-    }
-    local pip = fn.move_actions(win) or {}
-
-    fn.resizer(win, "Bitwarden", 20, 54, d, true)
-    fn.resizer(win, "Picture[- ]in[- ][Pp]icture", 0, 0, pip, false)
-end)
+hl.on("window.title", configure_window)
+hl.on("window.open", configure_window)
+hl.on("window.close", fn.save_pip)

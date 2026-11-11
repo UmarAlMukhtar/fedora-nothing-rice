@@ -16,8 +16,8 @@ if [[ ${XDG_CONFIG_HOME:-$HOME/.config} != "$HOME/.config" ]]; then
     exit 1
 fi
 
-sources=(config/hypr config/quickshell/glyph config/quickshell/rice config/fonts)
-targets=(.config/hypr .config/quickshell/glyph .config/quickshell/rice .local/share/fonts/glyph)
+sources=(config/hypr config/quickshell/glyph config/quickshell/rice config/fonts fedora/hyprland-session.target)
+targets=(.config/hypr .config/quickshell/glyph .config/quickshell/rice .local/share/fonts/glyph .config/systemd/user/hyprland-session.target)
 mode=${1:-install}
 if (( $# > 1 )); then
     echo "Use one installer option at a time." >&2
@@ -51,6 +51,9 @@ for i in "${!targets[@]}"; do
     if [[ -L $dst && $(readlink -- "$dst") == "$repo/${sources[i]}" ]]; then
         continue
     fi
+    if [[ ${sources[i]} == fedora/hyprland-session.target && -f $dst ]] && cmp -s -- "$dst" "$repo/${sources[i]}"; then
+        continue
+    fi
     if [[ -e $dst || -L $dst ]]; then
         printf 'Existing configuration at %s. Back it up and move it before installing.\n' "$dst" >&2
         exit 1
@@ -67,12 +70,16 @@ fi
 
 for i in "${!targets[@]}"; do
     dst=$HOME/${targets[i]}
-    if [[ -L $dst && $(readlink -- "$dst") == "$repo/${sources[i]}" ]]; then
+    if [[ -e $dst ]]; then
         continue
     fi
     mkdir -p -- "${dst%/*}"
     ln -sT -- "$repo/${sources[i]}" "$dst"
 done
+
+if systemctl --user show-environment >/dev/null 2>&1; then
+    systemctl --user daemon-reload
+fi
 
 state=${XDG_STATE_HOME:-$HOME/.local/state}/rice
 mkdir -p -- "$state" "$HOME/.config/demonshot" "$HOME/Pictures/Wallpapers"

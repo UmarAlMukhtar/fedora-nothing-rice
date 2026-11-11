@@ -76,12 +76,12 @@ hl.window_rule({
     idle_inhibit = "always",
 })
 
--- Picture in picture (resize and move done via script)
+-- Picture in picture (placement is restored when the window opens)
 hl.window_rule({
     match             = { title = "Picture(-| )in(-| )[Pp]icture" },
-    move              = "(monitor_w*0.98-window_w) (monitor_h*0.97-window_h)",
     pin               = true,
     float             = true,
+    no_initial_focus  = true,
     keep_aspect_ratio = true,
 })
 
@@ -109,11 +109,10 @@ hl.window_rule({
 hl.window_rule({ match = { class = "btop" }, workspace = "special:sysmon" })
 hl.window_rule({
     match     = {
-        class = "feishin|Spotify|Supersonic|Cider|com.github.th_ch.youtube_music|Plexamp|com-maxrave-simpmusic-MainKt",
+        class = "feishin|Supersonic|Cider|com.github.th_ch.youtube_music|Plexamp|com-maxrave-simpmusic-MainKt",
     },
     workspace = "special:music",
 })
-hl.window_rule({ match = { initial_title = "Spotify( \\(?Free\\)?)?" }, workspace = "special:music" }) -- Spotify wayland, it has no class for some reason; regex (re2), not a lua pattern
 hl.window_rule({ match = { class = "discord|equibop|vesktop|whatsapp|org\\.telegram\\.desktop|TelegramDesktop" }, workspace = "special:communication" })
 hl.window_rule({ match = { class = "Todoist|io\\.github\\.alainm23\\.planify" }, workspace = "special:todo" })
 

@@ -2,7 +2,7 @@ import QtQuick
 import qs
 import qs.services
 
-// back · play (a red circle — «live») · forward
+// back · play/pause · forward
 Row {
     id: root
 
@@ -19,12 +19,23 @@ Row {
         TapHandler { onTapped: Media.player?.previous() }
     }
     Rectangle {
+        id: playButton
         width: root.play
         height: root.play
         radius: root.play / 2
         color: Theme.accent
+        function activate() {
+            if (Media.player?.canTogglePlaying)
+                Media.player.togglePlaying();
+            else
+                Media.spotify(false);
+        }
+        Accessible.role: Accessible.Button
+        Accessible.name: Media.playing ? "Pause" : "Play"
+        Accessible.onPressAction: activate()
         Icon { anchors.centerIn: parent; text: Media.playing ? "\u{F03E4}" : "\u{F040A}"; color: Theme.on(Theme.accent); font.pixelSize: root.play * 0.46 }
-        TapHandler { onTapped: Media.player?.togglePlaying() }
+        HoverHandler { cursorShape: Qt.PointingHandCursor }
+        TapHandler { onTapped: playButton.activate() }
     }
     Icon {
         anchors.verticalCenter: parent.verticalCenter

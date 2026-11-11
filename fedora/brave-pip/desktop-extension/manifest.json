@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "Desktop Video PiP",
+  "version": "1.1.0",
+  "description": "Trigger native automatic PiP when leaving Brave, then restore the video tab on return.",
+  "permissions": [
+    "scripting",
+    "storage",
+    "nativeMessaging"
+  ],
+  "host_permissions": [
+    "https://*/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  }
+}

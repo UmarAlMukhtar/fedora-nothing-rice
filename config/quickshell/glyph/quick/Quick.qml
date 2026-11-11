@@ -302,6 +302,12 @@ PanelWindow {
                         height: 86
                         radius: Theme.corner(30)
                         color: Theme.s2
+                        TapHandler {
+                            onTapped: point => {
+                                if (!mctl.contains(mctl.mapFromItem(null, point.scenePosition)))
+                                    Media.spotify(true);
+                            }
+                        }
                         Art { id: mart; x: 12; anchors.verticalCenter: parent.verticalCenter; width: 62; height: 62; step: 4; url: Media.player?.trackArtUrl ?? "" }
                         Column {
                             anchors { left: mart.right; leftMargin: 16; right: mctl.left; rightMargin: 16; verticalCenter: parent.verticalCenter }

@@ -71,11 +71,18 @@ Scope {
         // without a timer we crop the frozen frame — what you saw is what you got; with a timer we shoot the live screen
         // vips, unlike magick, fails on a frame one pixel past the frame's edge — a fractional scale, so we clamp
         const cx = Math.round(r.x * k), cy = Math.round(r.y * k);
-        const crop = `${cx} ${cy} ${Math.min(Math.round(r.width * k), frozenImg.sourceSize.width - cx)} ${Math.min(Math.round(r.height * k), frozenImg.sourceSize.height - cy)}`;
+        const cw = Math.min(Math.round(r.width * k), frozenImg.sourceSize.width - cx);
+        const ch = Math.min(Math.round(r.height * k), frozenImg.sourceSize.height - cy);
         take.exec(["sh", "-c", `d="$(xdg-user-dir PICTURES)/shots"; mkdir -p "$d"; f="$d/shot-$(date +%F_%H-%M-%S).png"
-            if [ "$1" = 0 ]; then vips crop "$4" "$f[compression=1]" $2 2>/dev/null; else sleep "$1"; grim -g "$3" "$f"; fi \
+            if [ "$1" != 0 ]; then
+                sleep "$1"; grim -g "$3" "$f"
+            elif command -v vips >/dev/null 2>&1; then
+                vips crop "$4" "$f[compression=1]" $2
+            else
+                magick "$4" -crop "$5" +repage -define png:compression-level=1 "$f"
+            fi \
                 && wl-copy -t image/png < "$f" && printf '%s' "$f"`,
-            "sh", String(delay), crop, `${x},${y} ${w}x${h}`, frozen]);
+            "sh", String(delay), `${cx} ${cy} ${cw} ${ch}`, `${x},${y} ${w}x${h}`, frozen, `${cw}x${ch}+${cx}+${cy}`]);
     }
 
     Process {

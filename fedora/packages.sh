@@ -8,7 +8,7 @@ exec sudo dnf5 --repo=fedora --repo=updates \
     --setopt=nothing-hyprland.gpgcheck=1 \
     --setopt="nothing-hyprland.gpgkey=$copr/pubkey.gpg" \
     --setopt=install_weak_deps=False "$@" install \
-    'hyprland >= 0.56' 'quickshell >= 0.3.1' hypridle hyprsunset hyprpicker \
+    'hyprland >= 0.56' 'quickshell >= 0.3.1' hypridle hyprsunset hyprpicker hyprland-guiutils \
     xdg-desktop-portal-hyprland xdg-desktop-portal-gtk qt6-qtmultimedia qt6-qt5compat \
     qt6-qtimageformats qt6-qtwayland cliphist kitty wl-clipboard grim slurp \
     ImageMagick vips libqalculate brightnessctl playerctl cava udiskie lxqt-policykit \

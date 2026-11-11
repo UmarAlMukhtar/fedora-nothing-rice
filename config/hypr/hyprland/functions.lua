@@ -76,31 +76,44 @@ local function resizer(window, pattern, x_percent, y_percent, actions, exact)
     end
 end
 
-local function move_actions(win)
-    local screen = hl.get_active_monitor()
+local pip_windows = {}
+local pip_state = (os.getenv("XDG_STATE_HOME") or os.getenv("HOME") .. "/.local/state") .. "/rice/pip-geometry"
 
-    if screen and screen.width and screen.height and win and win.size then
-        local monitor_height = screen.height / screen.scale
-        local monitor_width  = screen.width / screen.scale
+local function restore_pip(win)
+    if not win.title:lower():match("^picture[- ]in[- ]picture$") or pip_windows[win.address] then return end
+    local screen = win.monitor
+    if not screen or win.size.x <= 0 or win.size.y <= 0 then return end
+    pip_windows[win.address] = true
 
-        local scale_factor   = (monitor_height / 4) / win.size.y
-
-        local target_width   = win.size.x * scale_factor
-        local target_height  = win.size.y * scale_factor
-
-        local x_resize       = math.floor(math.max(200, target_width))
-        local y_resize       = math.floor(math.max(150, target_height))
-
-        local offset         = math.min(monitor_width, monitor_height) * 0.03
-
-        local move_x         = math.floor(screen.x + monitor_width - x_resize - offset)
-        local move_y         = math.floor(screen.y + monitor_height - y_resize - offset)
-
-        return {
-            hl.dsp.window.resize({ x = x_resize, y = y_resize, window = win }),
-            hl.dsp.window.move({ x = move_x, y = move_y, relative = false, window = win }),
-        }
+    local x, y, width
+    local saved = io.open(pip_state, "r")
+    if saved then
+        x, y, width = saved:read("n", "n", "n")
+        saved:close()
     end
+    local ratio = win.size.x / win.size.y
+    local screen_w, screen_h = screen.width / screen.scale, screen.height / screen.scale
+    local margin = math.floor(math.min(screen_w, screen_h) * 0.03)
+    width = math.floor(math.min(screen_w, screen_h * ratio, math.max(200, width or screen_h * ratio / 4)))
+    local height = math.floor(width / ratio + 0.5)
+    local max_x, max_y = screen.x + screen_w - width, screen.y + screen_h - height
+    x = math.floor(math.max(screen.x, math.min(max_x, x or max_x - margin)))
+    y = math.floor(math.max(screen.y, math.min(max_y, y or max_y - margin)))
+
+    hl.dispatch(hl.dsp.window.float({ action = "on", window = win }))
+    hl.dispatch(hl.dsp.window.pin({ action = "on", window = win }))
+    hl.dispatch(hl.dsp.window.resize({ x = width, y = height, window = win }))
+    hl.dispatch(hl.dsp.window.move({ x = x, y = y, relative = false, window = win }))
+end
+
+local function save_pip(win)
+    if not pip_windows[win.address] then return end
+    pip_windows[win.address] = nil
+    if win.size.x <= 0 or win.size.y <= 0 then return end
+    local file = io.open(pip_state .. ".tmp", "w")
+    if not file then return end
+    file:write(string.format("%.0f %.0f %.0f\n", win.at.x, win.at.y, win.size.x))
+    if file:close() then os.rename(pip_state .. ".tmp", pip_state) end
 end
 
 -- special ws: open/close, and if it's empty — launch its program from vars.apps (replaces caelestia toggle).
@@ -118,6 +131,74 @@ local function toggle_special(name)
     end
 end
 
+local spotify_background = hl.window_rule({
+    name = "spotify-background",
+    enabled = false,
+    match = { class = [[(?i)(spotify|com\.spotify\.client)]] },
+    workspace = "special:spotify-background silent",
+    no_initial_focus = true,
+})
+local spotify_launch_timer
+local spotify_reveal_pending = false
+
+local function is_spotify(win)
+    local class = (win.class or ""):lower()
+    return class == "spotify" or class == "com.spotify.client"
+end
+
+local function finish_spotify_launch()
+    spotify_background:set_enabled(false)
+    spotify_launch_timer:set_enabled(false)
+    spotify_launch_timer = nil
+    spotify_reveal_pending = false
+end
+
+local function spotify(show_window)
+    for _, win in ipairs(hl.get_windows()) do
+        if win.mapped and is_spotify(win) then
+            if not show_window then return end
+            local window = "address:" .. win.address
+            if win.pinned then
+                hl.dispatch(hl.dsp.window.pin({ window = window, action = "off" }))
+            end
+            if win.workspace.special then
+                local workspace = hl.get_active_workspace()
+                if workspace then
+                    hl.dispatch(hl.dsp.window.move({ window = window, workspace = workspace.addressable_name, follow = true }))
+                end
+            else
+                hl.dispatch(hl.dsp.focus({ window = window }))
+            end
+            return
+        end
+    end
+
+    if spotify_launch_timer then
+        spotify_reveal_pending = spotify_reveal_pending or show_window == true
+        return
+    end
+
+    -- Flatpak's Spotify window can appear outside the launch command's PID tree.
+    spotify_background:set_enabled(not show_window)
+    spotify_launch_timer = hl.timer(finish_spotify_launch, { timeout = 15000, type = "oneshot" })
+    hl.exec_cmd(vars.apps.music)
+    if show_window then return end
+    hl.exec_cmd([[
+        for attempt in $(seq 1 15); do
+            [ "$(playerctl -p spotify status 2>/dev/null)" = Playing ] && exit 0
+            playerctl -p spotify play 2>/dev/null
+            sleep 1
+        done
+    ]])
+end
+
+hl.on("window.open", function(win)
+    if not spotify_launch_timer or not is_spotify(win) then return end
+    local reveal = spotify_reveal_pending
+    finish_spotify_launch()
+    if reveal then spotify(true) end
+end)
+
 -- gpu-screen-recorder screen recording: the same bind again — stop
 local function record(region, sound)
     return function()
@@ -130,11 +211,13 @@ end
 
 return {
     toggle_special       = toggle_special,
+    spotify              = spotify,
     record               = record,
     resizer              = resizer,
     resize_by_screen     = resize_by_screen,
     resize_active_window = resize_active_window,
     wsaction             = wsaction,
     wsstep               = wsstep,
-    move_actions         = move_actions,
+    restore_pip          = restore_pip,
+    save_pip             = save_pip,
 }

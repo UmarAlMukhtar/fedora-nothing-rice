@@ -1,0 +1,3 @@
+[Unit]
+Description=Hyprland graphical session
+BindsTo=graphical-session.target

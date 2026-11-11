@@ -61,7 +61,7 @@ Singleton {
             property bool ultra: false   // ultra mode (setMode 0): 60 Hz and no decorations over the settings
             property bool game: false    // game mode, like in caelestia: no animations, blur, shadows, gaps or rounding, tearing (Theme.apply)
             // what game mode leaves on (prefs → WINDOWS → in a game); tearing is always on in it
-            property bool gameGaps: false   // gaps, border and rounding as set
+            property bool gameGaps: false   // gaps and rounding as set
             property bool gameMotion: false // animations
             property bool gameBlur: false
             property bool gameShadow: false

@@ -656,11 +656,11 @@ PanelWindow {
                     Lb { topPadding: 6; text: bar.onTop ? "left of the clock" : "above the clock"; px: 10 }
                     Item { width: 1; height: 6 }
                     Repeater {
-                        model: bar.onTop ? [] : Quickshell.screens
+                        model: Quickshell.screens
                         Toggle {
                             required property var modelData
                             width: 200
-                            text: `hide · ${modelData.name}`
+                            text: `auto-hide · ${modelData.name}`
                             on: Theme.state.barHide.includes(modelData.name)
                             onFlip: {
                                 const a = Theme.state.barHide.filter(n => n !== modelData.name);
@@ -669,7 +669,6 @@ PanelWindow {
                             }
                         }
                     }
-                    Lb { visible: !bar.onTop; topPadding: 6; text: "auto-hide · experimental"; px: 10 }
                 }
             }
 
