@@ -13,4 +13,5 @@ exec sudo dnf5 --repo=fedora --repo=updates \
     qt6-qtimageformats qt6-qtwayland cliphist kitty wl-clipboard grim slurp \
     ImageMagick vips libqalculate brightnessctl playerctl cava udiskie lxqt-policykit \
     python3-dbus python3-gobject zenity gnome-keyring NetworkManager bluez pipewire \
-    pipewire-pulseaudio wireplumber upower gvfs gvfs-mtp pavucontrol
+    pipewire-pulseaudio wireplumber upower gvfs gvfs-mtp pavucontrol \
+    gnome-online-accounts evolution-data-server

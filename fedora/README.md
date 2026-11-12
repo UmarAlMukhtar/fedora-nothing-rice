@@ -64,6 +64,10 @@ Brave's automatic PiP can also open when you switch workspaces. With native Brav
 
 The Fedora installer sets up the Hyprland graphical session target for PipeWire screen sharing. Choose a **Window** in your app's share picker to keep other workspaces private.
 
+## Google Calendar
+
+Add Google in Fedora's **Settings → Online Accounts** and enable **Calendar** for the account. Hover over the Glyph clock to preview the calendar, or click it to keep it open until you click outside or press Escape. Dates with events show a dot. Hover over a date to see its events, or pin the calendar and use Tab. Glyph reads the enabled Google calendars through Evolution Data Server.
+
 ## Updates and removal
 
 Run `./install.sh --update` to fast-forward the checkout and refresh the dependencies. System → About can also run the rice update and Fedora's normal DNF upgrade. System → Firewall reports firewalld's state and opens Fedora's firewall UI when `firewall-config` is installed. Existing file managers remain selectable under System → Apps.

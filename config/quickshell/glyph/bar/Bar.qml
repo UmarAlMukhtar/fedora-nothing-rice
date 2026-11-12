@@ -23,6 +23,8 @@ PanelWindow {
     signal trayClicked
     signal powerClicked
     signal clockClicked
+    readonly property bool clockHovered: clockHover.hovered
+    property bool calendarOpen: false
 
     readonly property bool right_: Theme.barRight
     readonly property bool vert: Theme.state.barAt !== "top" // anything but top is at the side
@@ -33,7 +35,7 @@ PanelWindow {
     readonly property bool autoHide: Theme.state.barHide.includes(screen?.name ?? "")
         && (Hyprland.monitorFor(screen)?.activeWorkspace?.toplevels.values.length ?? 0) > 0
     property bool hov: false
-    readonly property bool shown: !autoHide || hov || powOpen || pop.visible
+    readonly property bool shown: !autoHide || hov || powOpen || pop.visible || calendarOpen
     property real slide: shown ? 1 : 0
     Behavior on slide { NumberAnimation { duration: Theme.t; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.glide } }
     exclusionMode: autoHide ? ExclusionMode.Ignore : ExclusionMode.Auto
@@ -189,12 +191,12 @@ PanelWindow {
                 }
             }
 
-            // the clock: at the side a column, 14 over 32 and the day, on top a row. A click — calendar and focus timer (cal/Cal)
+            // The clock previews the calendar on hover and pins it on click.
             Pile {
                 id: clk
                 anchors.centerIn: parent
                 TapHandler { onTapped: root.clockClicked() }
-                HoverHandler { cursorShape: Qt.PointingHandCursor }
+                HoverHandler { id: clockHover; cursorShape: Qt.PointingHandCursor }
                 Num { text: Theme.hh(clock.date); font.pixelSize: 30 }
                 Num { visible: !root.vert; text: ":"; font.pixelSize: 30 }
                 Num { text: Qt.formatTime(clock.date, "mm"); font.pixelSize: 30 }

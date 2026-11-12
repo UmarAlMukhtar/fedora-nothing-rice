@@ -84,10 +84,21 @@ ShellRoot {
             Hot { screen: s.modelData; onTriggered: quick.peek() }
             Bar {
                 screen: s.modelData
+                calendarOpen: cal.item ? cal.item.screen === screen && cal.item.visible : false
                 onMarkClicked: launcher.toggle()
                 onTrayClicked: quick.toggle()
                 onPowerClicked: shell.togglePower()
-                onClockClicked: cal.get().toggle()
+                onClockHoveredChanged: {
+                    const calendar = clockHovered ? cal.get() : cal.item;
+                    if (!calendar || calendar.pinned) return;
+                    if (clockHovered) calendar.screen = screen;
+                    if (calendar.screen === screen) calendar.preview(clockHovered);
+                }
+                onClockClicked: {
+                    const calendar = cal.get();
+                    calendar.screen = screen;
+                    calendar.pin();
+                }
             }
         }
     }
