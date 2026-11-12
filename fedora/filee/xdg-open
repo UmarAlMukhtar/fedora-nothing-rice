@@ -1,0 +1,5 @@
+#!/bin/sh
+case "${1-}" in
+    /*) exec /usr/bin/xdg-open "$@" ;;
+    *) printf '%s\n' 'Filee offline mode: external links are disabled.' >&2; exit 1 ;;
+esac

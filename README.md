@@ -23,7 +23,7 @@ cd ~/.local/share/fedora-nothing-rice
 ./install.sh
 ```
 
-See the [Fedora setup guide](fedora/README.md) for session selection, wallpaper controls, updates, and removal. The original Arch instructions are below.
+See the [Fedora setup guide](fedora/README.md) for session selection, wallpaper controls, updates, and removal. The [offline Filee conversion wheel](fedora/README.md#optional-offline-filee-conversion-wheel) is available as an add-on. The original Arch instructions are below.
 
 <h2 align="center">What's different in this fork</h2>
 

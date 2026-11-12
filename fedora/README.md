@@ -68,6 +68,25 @@ The Fedora installer sets up the Hyprland graphical session target for PipeWire 
 
 Add Google in Fedora's **Settings → Online Accounts** and enable **Calendar** for the account. Hover over the Glyph clock to preview the calendar, or click it to keep it open until you click outside or press Escape. Dates with events show a dot. Hover over a date to see its events, or pin the calendar and use Tab. Glyph reads the enabled Google calendars through Evolution Data Server.
 
+## Optional offline Filee conversion wheel
+
+Install the dependencies, then run the Filee setup from the rice checkout as your regular user.
+
+```bash
+sudo dnf install nautilus nautilus-python bubblewrap curl
+./fedora/filee/install.sh
+```
+
+The setup checks the SHA-256 of the [Filee 2.4.0 Linux x64 release](https://github.com/KnifeLemon/Filee/releases/tag/v2.4.0) before installing it. It also works with an existing standard Filee 2.4.0 installation. If you already have the release archive, pass its path to `./fedora/filee/install.sh` to skip the download.
+
+Close any active Filee conversions before running the setup. Run `nautilus -q` and reopen Files to load the extension. Run `hyprctl reload` in the rice session to enable the wheel's cursor placement and opening animation.
+
+Middle-click a local file in **Files (Nautilus)** to open its conversion wheel at the pointer. A three-finger tap does the same when your touchpad maps it to middle-click (Hyprland's default with tap-to-click enabled).
+
+Filee and its conversion tools run in an isolated network namespace. The setup disables automatic update checks, external links, and the GitHub feedback prompt. Built-in and already installed conversion engines work offline. Web downloads, optional engine downloads, and the local Ollama connection are unavailable in this mode. An upstream reinstall can replace the offline launchers.
+
+To remove the wheel gesture, delete `${XDG_DATA_HOME:-$HOME/.local/share}/nautilus-python/extensions/filee_middle_click.py`, restart Files and reload Hyprland. Filee's own uninstaller removes the app. After uninstalling, remove `${XDG_DATA_HOME:-$HOME/.local/share}/filee/offline-payload` to delete the saved offline launch files.
+
 ## Updates and removal
 
 Run `./install.sh --update` to fast-forward the checkout and refresh the dependencies. System → About can also run the rice update and Fedora's normal DNF upgrade. System → Firewall reports firewalld's state and opens Fedora's firewall UI when `firewall-config` is installed. Existing file managers remain selectable under System → Apps.

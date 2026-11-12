@@ -1,0 +1,13 @@
+#!/bin/sh
+set -eu
+entry=$(readlink -f -- "$0")
+app_dir=${entry%/*}
+payload="$app_dir/../offline-payload"
+
+# Keep Filee's executable paths stable for engine discovery and desktop integrations.
+exec /usr/bin/bwrap --unshare-net --bind / / --dev-bind /dev /dev \
+    --ro-bind "$payload/Filee" "$app_dir/Filee" \
+    --ro-bind "$payload/filee-cli" "$app_dir/filee-cli" \
+    --ro-bind "$payload/nsswitch.conf" "$(readlink -f /etc/nsswitch.conf)" \
+    --setenv PATH "$payload/bin:$PATH" \
+    -- "$entry" "$@"
